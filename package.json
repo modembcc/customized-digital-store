@@ -1,0 +1,19 @@
+{
+  "name": "customized-digital-store",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A customizable e-commerce platform with admin dashboard, built test-first from business requirements (BDD/ATDD).",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace server",
+    "dev:client": "npm run dev --workspace client",
+    "test": "npm run test --workspace server && npm run test --workspace client",
+    "test:server": "npm run test --workspace server",
+    "test:server:watch": "npm run test:watch --workspace server",
+    "test:client": "npm run test --workspace client",
+    "test:client:watch": "npm run test:watch --workspace client"
+  }
+}
