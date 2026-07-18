@@ -28,13 +28,17 @@ export default function AdminProductList() {
     }
   }
 
-  if (loading) return <p>Loading products...</p>;
+  if (loading) return <p className="loading-state">Loading products...</p>;
   if (error) return <p role="alert">{error}</p>;
 
   return (
     <section>
-      <h1>Products</h1>
-      <Link to="/admin/products/new">Add Product</Link>
+      <div className="admin-toolbar">
+        <h1>Products</h1>
+        <Link className="button" to="/admin/products/new">
+          Add Product
+        </Link>
+      </div>
       <table>
         <thead>
           <tr>
@@ -55,10 +59,16 @@ export default function AdminProductList() {
               <td>{product.stock}</td>
               <td>{product.isActive ? 'Yes' : 'No'}</td>
               <td>
-                <Link to={`/admin/products/${product._id}/edit`}>Edit</Link>
-                <button type="button" onClick={() => handleDelete(product._id)}>
-                  Delete
-                </button>
+                <div className="row-actions">
+                  <Link to={`/admin/products/${product._id}/edit`}>Edit</Link>
+                  <button
+                    type="button"
+                    className="danger"
+                    onClick={() => handleDelete(product._id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

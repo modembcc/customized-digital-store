@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 import ProductCard from './ProductCard';
 
 const product = {
@@ -30,5 +31,29 @@ describe('ProductCard', () => {
     render(<ProductCard product={{ ...product, stock: 0 }} />);
 
     expect(screen.getByTestId('product-stock')).toHaveTextContent('Out of stock');
+  });
+
+  it('does not render an Add to Cart button when onAddToCart is not provided', () => {
+    render(<ProductCard product={product} />);
+
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('calls onAddToCart with the product when the button is clicked', async () => {
+    const onAddToCart = vi.fn();
+    const user = userEvent.setup();
+
+    render(<ProductCard product={product} onAddToCart={onAddToCart} />);
+    await user.click(screen.getByRole('button', { name: /add to cart/i }));
+
+    expect(onAddToCart).toHaveBeenCalledWith(product);
+  });
+
+  it('disables the Add to Cart button when out of stock', () => {
+    const onAddToCart = vi.fn();
+
+    render(<ProductCard product={{ ...product, stock: 0 }} onAddToCart={onAddToCart} />);
+
+    expect(screen.getByRole('button', { name: /out of stock/i })).toBeDisabled();
   });
 });
