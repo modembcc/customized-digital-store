@@ -1,8 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Home from './Home';
 import * as api from '../services/api';
+import { CartProvider } from '../context/CartContext';
+
+beforeEach(() => {
+  window.localStorage.clear();
+});
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -30,7 +36,9 @@ const products = [
 function renderHome() {
   return render(
     <MemoryRouter>
-      <Home />
+      <CartProvider>
+        <Home />
+      </CartProvider>
     </MemoryRouter>
   );
 }
@@ -73,6 +81,25 @@ describe('Home', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Network error');
+    });
+  });
+
+  it('adds a product to the cart when its Add to Cart button is clicked', async () => {
+    vi.spyOn(api, 'fetchProducts').mockResolvedValue(products);
+    const user = userEvent.setup();
+
+    renderHome();
+    await waitFor(() => {
+      expect(screen.getAllByTestId('product-card')).toHaveLength(2);
+    });
+
+    await user.click(screen.getAllByRole('button', { name: /add to cart/i })[0]);
+
+    await waitFor(() => {
+      const stored = JSON.parse(window.localStorage.getItem('cart'));
+      expect(stored).toHaveLength(1);
+      expect(stored[0].product._id).toBe('1');
+      expect(stored[0].quantity).toBe(1);
     });
   });
 });

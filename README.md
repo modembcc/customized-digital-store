@@ -21,11 +21,14 @@ npm install       # installs both server and client workspaces
 
 ### Database
 
-No real MongoDB connection is required to run the tests — the backend test suite spins up
-an in-memory MongoDB instance automatically via `mongodb-memory-server`.
+No real MongoDB is required to run the app or the tests. The backend test suite spins up
+an in-memory MongoDB instance automatically via `mongodb-memory-server`, and `npm run
+dev:server` does the same as a fallback whenever `MONGODB_URI` is unset or unreachable —
+it seeds itself with the mock products so the app works with zero setup. Data in that
+in-memory fallback does not persist across server restarts.
 
-To run the app itself against a real database, copy `server/.env.example` to `server/.env`
-and set `MONGODB_URI` to your own connection string (a local `mongod`, Atlas, etc.). Then
+Once you have a real database, copy `server/.env.example` to `server/.env` and set
+`MONGODB_URI` to your own connection string (a local `mongod`, Atlas, etc.). Then
 optionally seed it with the mock products:
 
 ```bash
