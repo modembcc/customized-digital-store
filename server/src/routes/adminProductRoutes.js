@@ -1,5 +1,6 @@
 const express = require('express');
 const asyncHandler = require('../middleware/asyncHandler');
+const requireAuth = require('../middleware/requireAuth');
 const requireAdmin = require('../middleware/requireAdmin');
 const {
   getAllProductsForAdmin,
@@ -10,7 +11,7 @@ const {
 
 const router = express.Router();
 
-router.use(requireAdmin);
+router.use(requireAuth, requireAdmin);
 
 router.get('/', asyncHandler(getAllProductsForAdmin));
 router.post('/', asyncHandler(createProduct));

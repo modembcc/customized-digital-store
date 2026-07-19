@@ -10,23 +10,24 @@ async function handleResponse(res) {
 }
 
 export async function fetchProducts() {
-  const res = await fetch(`${BASE_URL}/products`);
+  const res = await fetch(`${BASE_URL}/products`, { credentials: 'include' });
   return handleResponse(res);
 }
 
 export async function fetchProductById(id) {
-  const res = await fetch(`${BASE_URL}/products/${id}`);
+  const res = await fetch(`${BASE_URL}/products/${id}`, { credentials: 'include' });
   return handleResponse(res);
 }
 
 export async function fetchAdminProducts() {
-  const res = await fetch(`${BASE_URL}/admin/products`);
+  const res = await fetch(`${BASE_URL}/admin/products`, { credentials: 'include' });
   return handleResponse(res);
 }
 
 export async function createProduct(product) {
   const res = await fetch(`${BASE_URL}/admin/products`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(product),
   });
@@ -36,6 +37,7 @@ export async function createProduct(product) {
 export async function updateProduct(id, product) {
   const res = await fetch(`${BASE_URL}/admin/products/${id}`, {
     method: 'PUT',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(product),
   });
@@ -45,6 +47,40 @@ export async function updateProduct(id, product) {
 export async function deleteProduct(id) {
   const res = await fetch(`${BASE_URL}/admin/products/${id}`, {
     method: 'DELETE',
+    credentials: 'include',
   });
+  return handleResponse(res);
+}
+
+export async function signup({ email, password }) {
+  const res = await fetch(`${BASE_URL}/auth/signup`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  return handleResponse(res);
+}
+
+export async function login({ email, password }) {
+  const res = await fetch(`${BASE_URL}/auth/login`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  return handleResponse(res);
+}
+
+export async function logout() {
+  const res = await fetch(`${BASE_URL}/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  return handleResponse(res);
+}
+
+export async function fetchCurrentUser() {
+  const res = await fetch(`${BASE_URL}/auth/me`, { credentials: 'include' });
   return handleResponse(res);
 }

@@ -1,6 +1,8 @@
-// Placeholder gate for admin-only routes. No auth system exists yet, so this
-// always allows the request through; swap in real session/token checks later.
+// Assumes requireAuth has already run and set req.user — only checks role.
 function requireAdmin(req, res, next) {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
   next();
 }
 
