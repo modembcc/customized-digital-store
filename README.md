@@ -60,6 +60,16 @@ credentialed CORS).
 Signup has a `verifyCaptcha` middleware mount point (`server/src/middleware/verifyCaptcha.js`)
 that's currently a no-op placeholder — no captcha provider is wired up yet.
 
+## Product images
+
+Admins can upload one image per product (`POST /api/admin/products/upload`, `multipart/form-data`,
+field name `image`) from the product form — selecting a file uploads it immediately and shows
+a preview. Images are limited to 2MB, must be an image mimetype, and only one file per request
+is accepted. Uploaded files are stored on local disk under `server/uploads/` (gitignored) and
+served back at `/uploads/<filename>`; this is fine for local development but won't survive a
+redeploy on hosts without persistent disk (e.g. most serverless platforms) — swapping in a real
+object store (S3, Cloudinary, etc.) behind the same endpoint is a natural later upgrade.
+
 ## Running tests (TDD workflow)
 
 ```bash
@@ -87,7 +97,8 @@ server/
     routes/                 # /api/products (public), /api/admin/products (admin),
                              # /api/auth (signup/login/logout/me)
     middleware/             # asyncHandler, errorHandler, requireAuth, requireAdmin,
-                             # verifyCaptcha placeholder
+                             # verifyCaptcha placeholder, uploadImage (multer)
+  uploads/                  # uploaded product images (gitignored, local disk only)
   tests/
     unit/                   # model validation, controllers with mocked models
     integration/            # full HTTP requests against an in-memory MongoDB
@@ -114,4 +125,4 @@ Each business requirement should start as a failing test in `server/tests/` and/
 - Profile editing, "remember me", rate limiting on login, refresh tokens
 - A role-promotion endpoint (currently a deliberate manual-DB-edit step)
 - Product search/filtering by category
-- Image upload for products (currently placeholder image URLs)
+- Move product image storage off local disk to a real object store for production use

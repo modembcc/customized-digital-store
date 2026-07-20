@@ -8,6 +8,7 @@ const {
   createProduct,
   updateProduct,
   deleteProduct,
+  uploadProductImage,
 } = require('../../src/controllers/productController');
 
 function mockRes() {
@@ -154,5 +155,26 @@ describe('deleteProduct', () => {
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ message: 'Product not found' });
+  });
+});
+
+describe('uploadProductImage', () => {
+  it('returns the uploaded file path as 201', async () => {
+    const req = { file: { filename: 'abc123.png' } };
+    const res = mockRes();
+
+    await uploadProductImage(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith({ imageUrl: '/uploads/abc123.png' });
+  });
+
+  it('returns 400 when no file was uploaded', async () => {
+    const req = {};
+    const res = mockRes();
+
+    await uploadProductImage(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
   });
 });

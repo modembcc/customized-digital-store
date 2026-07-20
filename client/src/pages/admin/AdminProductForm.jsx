@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createProduct, fetchProductById, updateProduct } from '../../services/api';
+import { createProduct, fetchProductById, updateProduct, uploadProductImage } from '../../services/api';
 
 const emptyForm = {
   name: '',
@@ -9,6 +9,7 @@ const emptyForm = {
   category: '',
   sku: '',
   stock: '',
+  imageUrl: '',
 };
 
 export default function AdminProductForm() {
@@ -18,6 +19,7 @@ export default function AdminProductForm() {
 
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (!isEditing) return;
@@ -30,6 +32,7 @@ export default function AdminProductForm() {
           category: product.category,
           sku: product.sku,
           stock: product.stock,
+          imageUrl: product.imageUrl,
         })
       )
       .catch((err) => setError(err.message));
@@ -38,6 +41,22 @@ export default function AdminProductForm() {
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleImageChange(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setError(null);
+    setUploading(true);
+    try {
+      const { imageUrl } = await uploadProductImage(file);
+      setForm((prev) => ({ ...prev, imageUrl }));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleSubmit(event) {
@@ -49,6 +68,7 @@ export default function AdminProductForm() {
       price: Number(form.price),
       stock: Number(form.stock),
     };
+    if (!payload.imageUrl) delete payload.imageUrl;
 
     try {
       if (isEditing) {
@@ -108,7 +128,16 @@ export default function AdminProductForm() {
           required
         />
 
-        <button type="submit">{isEditing ? 'Save Changes' : 'Create Product'}</button>
+        <label htmlFor="image">Product Image</label>
+        <input id="image" name="image" type="file" accept="image/*" onChange={handleImageChange} disabled={uploading} />
+        {uploading && <p>Uploading...</p>}
+        {form.imageUrl && (
+          <img src={form.imageUrl} alt="Product preview" className="image-preview" />
+        )}
+
+        <button type="submit" disabled={uploading}>
+          {isEditing ? 'Save Changes' : 'Create Product'}
+        </button>
       </form>
     </section>
   );
