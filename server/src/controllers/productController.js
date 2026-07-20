@@ -50,6 +50,14 @@ async function deleteProduct(req, res) {
   res.status(200).json({ message: 'Product deleted' });
 }
 
+// POST /api/admin/products/upload
+async function uploadProductImage(req, res) {
+  if (!req.file) {
+    return res.status(400).json({ message: 'Please upload a valid image file (jpeg, png, webp, or gif)' });
+  }
+  res.status(201).json({ imageUrl: `/uploads/${req.file.filename}` });
+}
+
 module.exports = {
   getProducts,
   getProductById,
@@ -57,4 +65,5 @@ module.exports = {
   createProduct,
   updateProduct,
   deleteProduct,
+  uploadProductImage,
 };

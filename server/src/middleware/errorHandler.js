@@ -13,6 +13,9 @@ function errorHandler(err, req, res, next) {
   if (err.code === 11000) {
     return res.status(409).json({ message: 'Duplicate value violates a unique constraint' });
   }
+  if (err.name === 'MulterError') {
+    return res.status(400).json({ message: err.message });
+  }
 
   const statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
   res.status(statusCode).json({ message: err.message || 'Internal Server Error' });

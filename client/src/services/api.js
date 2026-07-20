@@ -52,6 +52,18 @@ export async function deleteProduct(id) {
   return handleResponse(res);
 }
 
+export async function uploadProductImage(file) {
+  const formData = new FormData();
+  formData.append('image', file);
+  // No Content-Type header — the browser sets the multipart boundary itself.
+  const res = await fetch(`${BASE_URL}/admin/products/upload`, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  });
+  return handleResponse(res);
+}
+
 export async function signup({ email, password }) {
   const res = await fetch(`${BASE_URL}/auth/signup`, {
     method: 'POST',

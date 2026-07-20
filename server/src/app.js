@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const productRoutes = require('./routes/productRoutes');
 const adminProductRoutes = require('./routes/adminProductRoutes');
 const authRoutes = require('./routes/authRoutes');
+const uploadImage = require('./middleware/uploadImage');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 function createApp() {
@@ -17,6 +18,7 @@ function createApp() {
   );
   app.use(cookieParser());
   app.use(express.json());
+  app.use('/uploads', express.static(uploadImage.UPLOAD_DIR));
 
   app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok' });

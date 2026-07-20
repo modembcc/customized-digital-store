@@ -373,3 +373,13 @@ form button {
   margin-top: 16px;
   align-self: flex-start;
 }
+
+.image-preview {
+  margin-top: 10px;
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
