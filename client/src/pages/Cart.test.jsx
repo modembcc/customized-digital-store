@@ -1,8 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Cart from './Cart';
+import * as api from '../services/api';
+import { AuthProvider } from '../context/AuthContext';
 import { CartProvider } from '../context/CartContext';
 
 const productA = { _id: 'a', name: 'Widget', price: 10, imageUrl: 'https://placehold.co/1' };
@@ -15,15 +17,22 @@ function seedCart(items) {
 function renderCart() {
   return render(
     <MemoryRouter>
-      <CartProvider>
-        <Cart />
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Cart />
+        </CartProvider>
+      </AuthProvider>
     </MemoryRouter>
   );
 }
 
 beforeEach(() => {
   window.localStorage.clear();
+  vi.spyOn(api, 'fetchCurrentUser').mockRejectedValue(new Error('Not authenticated'));
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe('Cart', () => {

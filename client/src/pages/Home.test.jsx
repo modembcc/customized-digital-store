@@ -4,10 +4,12 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Home from './Home';
 import * as api from '../services/api';
+import { AuthProvider } from '../context/AuthContext';
 import { CartProvider } from '../context/CartContext';
 
 beforeEach(() => {
   window.localStorage.clear();
+  vi.spyOn(api, 'fetchCurrentUser').mockRejectedValue(new Error('Not authenticated'));
 });
 
 afterEach(() => {
@@ -36,9 +38,11 @@ const products = [
 function renderHome() {
   return render(
     <MemoryRouter>
-      <CartProvider>
-        <Home />
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Home />
+        </CartProvider>
+      </AuthProvider>
     </MemoryRouter>
   );
 }
