@@ -33,7 +33,16 @@ function QuantityInput({ product, quantity, onChange }) {
 }
 
 export default function Cart() {
-  const { items, removeItem, setQuantity, clearCart, totalPrice } = useCart();
+  const { items, removeItem, setQuantity, clearCart, totalPrice, loading } = useCart();
+
+  if (loading) {
+    return (
+      <section>
+        <h1>Your Cart</h1>
+        <p className="loading-state">Loading your cart...</p>
+      </section>
+    );
+  }
 
   if (items.length === 0) {
     return (

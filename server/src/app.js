@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const productRoutes = require('./routes/productRoutes');
 const adminProductRoutes = require('./routes/adminProductRoutes');
 const authRoutes = require('./routes/authRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 const uploadImage = require('./middleware/uploadImage');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
@@ -27,6 +28,7 @@ function createApp() {
   app.use('/api/products', productRoutes);
   app.use('/api/admin/products', adminProductRoutes);
   app.use('/api/auth', authRoutes);
+  app.use('/api/cart', cartRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

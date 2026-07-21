@@ -96,3 +96,22 @@ export async function fetchCurrentUser() {
   const res = await fetch(`${BASE_URL}/auth/me`, { credentials: 'include' });
   return handleResponse(res);
 }
+
+export async function fetchCart() {
+  const res = await fetch(`${BASE_URL}/cart`, { credentials: 'include' });
+  return handleResponse(res);
+}
+
+export async function syncCart(items) {
+  // Send only { product: id, quantity } pairs — CartContext's items hold the full populated
+  // product object, and posting that nested object back as the `product` ref field is an
+  // unnecessary risk (relying on Mongoose's cast leniency) as well as needless payload bloat.
+  const payload = items.map(({ product, quantity }) => ({ product: product._id, quantity }));
+  const res = await fetch(`${BASE_URL}/cart`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: payload }),
+  });
+  return handleResponse(res);
+}

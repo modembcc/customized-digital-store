@@ -8,8 +8,9 @@ A customizable e-commerce platform with admin dashboard, built test-first from b
 - **Frontend**: React, Vite, React Router — `client/`
 - **Testing**: Jest + Supertest + `mongodb-memory-server` (backend), Vitest + React Testing Library (frontend)
 
-A public product listing, product detail page, client-side cart, email/password accounts,
-and admin pages to list/create/edit/delete products (gated to the `admin` role).
+A public product listing, product detail page, a cart that follows a signed-in shopper across
+devices, email/password accounts, and admin pages to list/create/edit/delete products (gated to
+the `admin` role).
 
 ## Getting started
 
@@ -60,6 +61,19 @@ credentialed CORS).
 Signup has a `verifyCaptcha` middleware mount point (`server/src/middleware/verifyCaptcha.js`)
 that's currently a no-op placeholder — no captcha provider is wired up yet.
 
+## Cart
+
+Logged-out visitors get a plain localStorage-backed cart, same as before. Logging in fetches
+that account's server-saved cart (`GET /api/cart`) and **merges** it with whatever was in the
+guest cart — quantities are summed for a product present in both, guest-only products are added
+alongside the account's existing items. Nothing a shopper added while browsing anonymously is
+discarded. From that point on, every cart change is debounced and pushed to the server
+(`PUT /api/cart`, a full-array replace — the server never merges, only the client-side login
+step does); localStorage is left untouched while authenticated. Logging out resets the visible
+cart to empty and clears the local `cart` key, so the next guest session starts fresh — the
+account's cart itself stays saved server-side and reappears (merging again) on the next login,
+from any device.
+
 ## Product images
 
 Admins can upload one image per product (`POST /api/admin/products/upload`, `multipart/form-data`,
@@ -92,10 +106,11 @@ server/
     config/auth.js         # JWT secret/expiry/cookie config (dev fallback + warning)
     models/Product.js      # Product schema/validation
     models/User.js         # User schema — email/password (hashed)/role
+    models/Cart.js         # One cart per user (unique user ref), items ref Product
     data/mockProducts.js   # seed data
-    controllers/           # request handlers (products, auth)
+    controllers/           # request handlers (products, auth, cart)
     routes/                 # /api/products (public), /api/admin/products (admin),
-                             # /api/auth (signup/login/logout/me)
+                             # /api/auth (signup/login/logout/me), /api/cart (requireAuth)
     middleware/             # asyncHandler, errorHandler, requireAuth, requireAdmin,
                              # verifyCaptcha placeholder, uploadImage (multer)
   uploads/                  # uploaded product images (gitignored, local disk only)

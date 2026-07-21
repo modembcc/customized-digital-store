@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ProductDetail from './ProductDetail';
 import * as api from '../services/api';
+import { AuthProvider } from '../context/AuthContext';
 import { CartProvider } from '../context/CartContext';
 
 const product = {
@@ -19,17 +20,20 @@ const product = {
 function renderDetail(id = '1') {
   return render(
     <MemoryRouter initialEntries={[`/products/${id}`]}>
-      <CartProvider>
-        <Routes>
-          <Route path="/products/:id" element={<ProductDetail />} />
-        </Routes>
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Routes>
+            <Route path="/products/:id" element={<ProductDetail />} />
+          </Routes>
+        </CartProvider>
+      </AuthProvider>
     </MemoryRouter>
   );
 }
 
 beforeEach(() => {
   window.localStorage.clear();
+  vi.spyOn(api, 'fetchCurrentUser').mockRejectedValue(new Error('Not authenticated'));
 });
 
 afterEach(() => {
