@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { createCheckoutSession } from '../services/api';
 
 // Local draft state so the field can be freely cleared and retyped instead of
 // being immediately snapped back to a clamped value by the controlled value.
@@ -34,6 +36,26 @@ function QuantityInput({ product, quantity, onChange }) {
 
 export default function Cart() {
   const { items, removeItem, setQuantity, clearCart, totalPrice, loading } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [checkoutError, setCheckoutError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleCheckout() {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: '/cart' } });
+      return;
+    }
+    setCheckoutError(null);
+    setSubmitting(true);
+    try {
+      const { url } = await createCheckoutSession();
+      window.location.assign(url);
+    } catch (err) {
+      setCheckoutError(err.message);
+      setSubmitting(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -93,12 +115,13 @@ export default function Cart() {
       <p className="cart-total" data-testid="cart-total">
         Total: ${totalPrice.toFixed(2)}
       </p>
+      {checkoutError && <p role="alert">{checkoutError}</p>}
       <div className="cart-actions">
         <button type="button" className="secondary" onClick={clearCart}>
           Clear Cart
         </button>
-        <button type="button" disabled title="Checkout is not implemented yet">
-          Checkout (coming soon)
+        <button type="button" onClick={handleCheckout} disabled={submitting}>
+          {submitting ? 'Redirecting to checkout...' : 'Checkout'}
         </button>
       </div>
     </section>

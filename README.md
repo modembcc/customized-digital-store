@@ -74,6 +74,28 @@ cart to empty and clears the local `cart` key, so the next guest session starts 
 account's cart itself stays saved server-side and reappears (merging again) on the next login,
 from any device.
 
+## Checkout
+
+Checkout uses **Stripe Checkout** (hosted, redirect-based) — the client never touches a Stripe
+SDK; the server creates a Checkout Session and the browser is redirected straight to Stripe's
+payment page. On checkout, the current cart is snapshotted into an `Order` (`user`, `items` with
+`name`/`price`/`quantity` captured at purchase time, `totalAmount`, `status`), which doubles as
+the receipt shown on `/checkout/success` and the foundation for order history later.
+
+**No `STRIPE_SECRET_KEY` configured yet** — unlike `JWT_SECRET`/`MONGODB_URI`, there is no safe
+fallback for a payment provider. `POST /api/checkout` and `GET /api/checkout/:orderId` return
+**503** until a real Stripe test-mode key is added to `server/.env` (see `server/.env.example`).
+
+**No webhook** — payment is confirmed when the browser lands back on `/checkout/success` and the
+client asks the server to verify the session (`stripe.checkout.sessions.retrieve`), not via a
+`checkout.session.completed` webhook. This is deliberately simpler (no raw-body signature
+verification, no `STRIPE_WEBHOOK_SECRET`, testable without Stripe CLI), but has a real limitation:
+**if a shopper closes the tab before that verification call completes, Stripe will have charged
+them but the Order stays `pending` forever with no automatic reconciliation.** A second, narrower
+accepted gap: if Stripe session creation fails right after the `Order` is saved (no transaction
+wraps the two writes), the Order is left `pending` with no `stripeSessionId` — surfaced as a 409
+if revisited, not silently retried.
+
 ## Product images
 
 Admins can upload one image per product (`POST /api/admin/products/upload`, `multipart/form-data`,
@@ -107,10 +129,13 @@ server/
     models/Product.js      # Product schema/validation
     models/User.js         # User schema — email/password (hashed)/role
     models/Cart.js         # One cart per user (unique user ref), items ref Product
+    models/Order.js        # Many per user; items snapshot name/price at purchase time
     data/mockProducts.js   # seed data
-    controllers/           # request handlers (products, auth, cart)
+    config/stripe.js        # Stripe client — null (503 on checkout) if STRIPE_SECRET_KEY unset
+    controllers/           # request handlers (products, auth, cart, checkout)
     routes/                 # /api/products (public), /api/admin/products (admin),
-                             # /api/auth (signup/login/logout/me), /api/cart (requireAuth)
+                             # /api/auth (signup/login/logout/me), /api/cart (requireAuth),
+                             # /api/checkout (requireAuth)
     middleware/             # asyncHandler, errorHandler, requireAuth, requireAdmin,
                              # verifyCaptcha placeholder, uploadImage (multer)
   uploads/                  # uploaded product images (gitignored, local disk only)
@@ -120,7 +145,7 @@ server/
 
 client/
   src/
-    pages/                  # Home, ProductDetail, Cart, Login, Signup, admin/*
+    pages/                  # Home, ProductDetail, Cart, CheckoutSuccess/Cancel, Login, Signup, admin/*
     components/             # ProductCard, Header, RequireAdmin (route guard)
     context/                # CartContext, AuthContext
     services/api.js         # fetch wrappers for the backend API
@@ -133,8 +158,12 @@ client/
 Each business requirement should start as a failing test in `server/tests/` and/or
 `client/src/**/*.test.jsx` before implementation. Natural next slices for this store:
 
-- Checkout flow (cart already exists; no order/payment step yet)
-- Order model and order history
+- A real `checkout.session.completed` webhook, for reconciling payments when a shopper closes
+  the tab before the success page's verification call completes
+- Stock decrement on purchase
+- An order-history list page (the `Order` model already exists from checkout)
+- Refunds and multi-currency support
+- A cleanup pass for stale `pending` orders
 - A real captcha provider behind the existing `verifyCaptcha` placeholder
 - Password reset and email verification
 - Profile editing, "remember me", rate limiting on login, refresh tokens

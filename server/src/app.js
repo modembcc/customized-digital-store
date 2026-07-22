@@ -5,6 +5,7 @@ const productRoutes = require('./routes/productRoutes');
 const adminProductRoutes = require('./routes/adminProductRoutes');
 const authRoutes = require('./routes/authRoutes');
 const cartRoutes = require('./routes/cartRoutes');
+const checkoutRoutes = require('./routes/checkoutRoutes');
 const uploadImage = require('./middleware/uploadImage');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
@@ -29,6 +30,7 @@ function createApp() {
   app.use('/api/admin/products', adminProductRoutes);
   app.use('/api/auth', authRoutes);
   app.use('/api/cart', cartRoutes);
+  app.use('/api/checkout', checkoutRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

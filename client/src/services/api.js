@@ -102,6 +102,19 @@ export async function fetchCart() {
   return handleResponse(res);
 }
 
+export async function createCheckoutSession() {
+  const res = await fetch(`${BASE_URL}/checkout`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  return handleResponse(res);
+}
+
+export async function fetchCheckoutSession(orderId) {
+  const res = await fetch(`${BASE_URL}/checkout/${orderId}`, { credentials: 'include' });
+  return handleResponse(res);
+}
+
 export async function syncCart(items) {
   // Send only { product: id, quantity } pairs — CartContext's items hold the full populated
   // product object, and posting that nested object back as the `product` ref field is an
