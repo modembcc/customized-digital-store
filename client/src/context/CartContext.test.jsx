@@ -293,6 +293,38 @@ describe('CartContext (server sync)', () => {
     );
   });
 
+  it('does not re-merge the same guest snapshot on a subsequent full-page reload', async () => {
+    // Regression test: a full-page reload while still authenticated (e.g. every
+    // Stripe Checkout redirect round trip, or just hitting refresh) used to
+    // re-merge whatever localStorage last held pre-merge, duplicating quantities
+    // on every reload since nothing ever cleared that stale snapshot.
+    window.localStorage.setItem('cart', JSON.stringify([{ product: productA, quantity: 1 }]));
+    vi.spyOn(api, 'login').mockResolvedValue({ id: '1', email: 'user@example.com', role: 'customer' });
+    vi.spyOn(api, 'fetchCart').mockResolvedValue({ items: [] });
+    vi.spyOn(api, 'syncCart').mockResolvedValue({ items: [] });
+    const user = userEvent.setup();
+
+    const { unmount } = renderCart();
+    await user.click(screen.getByText('Auth Login'));
+    await waitFor(() => expect(screen.getByTestId('item-a')).toHaveTextContent('A x 1'));
+
+    // Simulate the browser tearing down and recreating the whole React tree on
+    // a full navigation, with the same authenticated session still active and
+    // the server cart now reflecting last render's merge result.
+    unmount();
+    vi.spyOn(api, 'fetchCurrentUser').mockResolvedValue({
+      id: '1',
+      email: 'user@example.com',
+      role: 'customer',
+    });
+    vi.spyOn(api, 'fetchCart').mockResolvedValue({ items: [{ product: productA, quantity: 1 }] });
+
+    renderCart();
+
+    await waitFor(() => expect(screen.getByTestId('item-a')).toHaveTextContent('A x 1'));
+    expect(screen.getByTestId('total-items')).toHaveTextContent('1');
+  });
+
   it('does not write to localStorage while authenticated', async () => {
     vi.spyOn(api, 'login').mockResolvedValue({ id: '1', email: 'user@example.com', role: 'customer' });
     vi.spyOn(api, 'fetchCart').mockResolvedValue({ items: [] });

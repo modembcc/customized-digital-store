@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Cart from './Cart';
 import * as api from '../services/api';
@@ -16,10 +16,13 @@ function seedCart(items) {
 
 function renderCart() {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={['/cart']}>
       <AuthProvider>
         <CartProvider>
-          <Cart />
+          <Routes>
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/login" element={<p>Login page</p>} />
+          </Routes>
         </CartProvider>
       </AuthProvider>
     </MemoryRouter>
@@ -33,6 +36,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 describe('Cart', () => {
@@ -98,11 +102,64 @@ describe('Cart', () => {
     });
   });
 
-  it('disables checkout since it is not implemented yet', () => {
-    seedCart([{ product: productA, quantity: 1 }]);
+  describe('checkout', () => {
+    it('redirects to login when not authenticated', async () => {
+      vi.spyOn(api, 'createCheckoutSession');
+      seedCart([{ product: productA, quantity: 1 }]);
+      const user = userEvent.setup();
 
-    renderCart();
+      renderCart();
+      await user.click(screen.getByRole('button', { name: /checkout/i }));
 
-    expect(screen.getByRole('button', { name: /checkout/i })).toBeDisabled();
+      await waitFor(() => {
+        expect(screen.getByText('Login page')).toBeInTheDocument();
+      });
+      expect(api.createCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('redirects to the Stripe Checkout url when authenticated', async () => {
+      vi.spyOn(api, 'fetchCurrentUser').mockResolvedValue({
+        id: '1',
+        email: 'user@example.com',
+        role: 'customer',
+      });
+      vi.spyOn(api, 'createCheckoutSession').mockResolvedValue({
+        url: 'https://checkout.stripe.com/sess_123',
+      });
+      // jsdom's window.location.assign isn't configurable, so it can't be spied
+      // directly — stub the whole global instead.
+      const assignMock = vi.fn();
+      vi.stubGlobal('location', { ...window.location, assign: assignMock });
+      seedCart([{ product: productA, quantity: 1 }]);
+      const user = userEvent.setup();
+
+      renderCart();
+      await waitFor(() => expect(screen.getByText('Widget')).toBeInTheDocument());
+      await user.click(screen.getByRole('button', { name: /checkout/i }));
+
+      await waitFor(() => {
+        expect(assignMock).toHaveBeenCalledWith('https://checkout.stripe.com/sess_123');
+      });
+    });
+
+    it('shows an error and re-enables the button when creating the session fails', async () => {
+      vi.spyOn(api, 'fetchCurrentUser').mockResolvedValue({
+        id: '1',
+        email: 'user@example.com',
+        role: 'customer',
+      });
+      vi.spyOn(api, 'createCheckoutSession').mockRejectedValue(new Error('Your cart is empty'));
+      seedCart([{ product: productA, quantity: 1 }]);
+      const user = userEvent.setup();
+
+      renderCart();
+      await waitFor(() => expect(screen.getByText('Widget')).toBeInTheDocument());
+      await user.click(screen.getByRole('button', { name: /checkout/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toHaveTextContent('Your cart is empty');
+      });
+      expect(screen.getByRole('button', { name: /^checkout$/i })).not.toBeDisabled();
+    });
   });
 });

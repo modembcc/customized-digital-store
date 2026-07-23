@@ -100,8 +100,13 @@ export function CartProvider({ children }) {
         .then((data) => {
           hydratedRef.current = true;
           dispatch({ type: 'HYDRATE', payload: mergeCartItems(guestItems, data.items) });
-          // The debounced sync effect below persists the merge result back to
-          // the server — no separate "post-merge save" step needed.
+          // Clear the pre-merge snapshot now that it's been folded in — otherwise
+          // it lingers forever (the persistence effect stops writing once
+          // hydratedRef is true, but never erases what it last wrote), and a
+          // later full-page reload while still authenticated (e.g. every Stripe
+          // Checkout round trip, or just an F5) would read that same stale
+          // snapshot again and re-merge it, duplicating quantities each time.
+          window.localStorage.removeItem(STORAGE_KEY);
         })
         .catch(() => {
           // Couldn't reach the server — keep showing the guest cart; hydratedRef stays false.
