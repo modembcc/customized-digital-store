@@ -10,6 +10,8 @@ export default function Header() {
     <header className="site-header">
       <nav>
         <Link to="/">Customized Digital Store</Link>
+        <Link to="/contact">Contact Us</Link>
+        <Link to="/orders">Orders</Link>
         {isAdmin && <Link to="/admin">Admin</Link>}
         {user ? (
           <>

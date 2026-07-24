@@ -65,6 +65,13 @@ describe('Header (logged out)', () => {
     expect(screen.getByRole('link', { name: /customized digital store/i })).toHaveAttribute('href', '/');
     expect(screen.getByTestId('cart-link')).toHaveAttribute('href', '/cart');
   });
+
+  it('links to the contact and orders pages', () => {
+    renderHeader();
+
+    expect(screen.getByRole('link', { name: 'Contact Us' })).toHaveAttribute('href', '/contact');
+    expect(screen.getByRole('link', { name: 'Orders' })).toHaveAttribute('href', '/orders');
+  });
 });
 
 describe('Header (logged in as customer)', () => {

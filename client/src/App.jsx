@@ -8,6 +8,8 @@ import CheckoutSuccess from './pages/CheckoutSuccess';
 import CheckoutCancel from './pages/CheckoutCancel';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Contact from './pages/Contact';
+import Orders from './pages/Orders';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminProductList from './pages/admin/AdminProductList';
 import AdminProductForm from './pages/admin/AdminProductForm';
@@ -25,6 +27,8 @@ export default function App() {
           <Route path="/checkout/cancel" element={<CheckoutCancel />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/orders" element={<Orders />} />
 
           <Route element={<RequireAdmin />}>
             <Route path="/admin" element={<AdminDashboard />} />
